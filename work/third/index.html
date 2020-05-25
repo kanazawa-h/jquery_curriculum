@@ -25,7 +25,7 @@
     <script src="../../common/js/jquery.js"></script>
     <script>
       $(function() {
-        $('.nav').find('li').click(function() {
+        $('.nav li').click(function() {
           var num = $(this).index();
           $('.contents').find('li').addClass('is-hidden');
           $('.contents').find('li').eq(num).removeClass('is-hidden');
