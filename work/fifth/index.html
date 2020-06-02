@@ -87,13 +87,13 @@
       $(function() {
         $('.select').change(function() {
           var val = $(this).val();
-          $('li').each(function(){
-            if (val == $(this).data('category-type')) {
-              $(this).show();
+          $('li').each(function(index, element) {
+            if (val === 'all') {
+              $(element).show();
+            } else if (val === $(element).data('category-type')) {
+              $(element).show();
             } else {
-              $(this).hide();
-            } if (val == 'all') {
-              $(this).show();
+              $(element).hide();
             }
           });
         });
