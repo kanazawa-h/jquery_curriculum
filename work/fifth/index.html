@@ -87,15 +87,17 @@
       $(function() {
         $('.select').change(function() {
           var val = $(this).val();
-          $('li').each(function(index, element) {
-            if (val === 'all') {
-              $(element).show();
-            } else if (val === $(element).data('category-type')) {
-              $(element).show();
-            } else {
-              $(element).hide();
-            }
-          });
+          if (val === 'all') {
+              $('li').show();
+          } else  {
+            $('.list li').each(function(index, element) {
+              if (val === $(element).data('category-type')) {
+                $(element).show();
+              } else {
+                $(element).hide();
+              }
+            });
+          }
         });
       });
       // 今回やるのはソート機能です。

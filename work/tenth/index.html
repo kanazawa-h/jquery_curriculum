@@ -26,6 +26,50 @@
     </div>
     <script src="../../common/js/jquery.js"></script>
     <script>
+      $(function() {
+        $('#js-search-button').on('click', function() {
+          var searchWord = $('#js-search-word').val();
+          var pageNum = 1;
+          $.ajax({
+            url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
+            type: 'GET',
+            datatype: 'json',
+            data: { 
+              applicationId: '1019399324990976605', 
+              booksGenreId: '001',
+              keyword: searchWord,
+              page: pageNum,
+              hits: 20
+            },
+          }).done(function(data) {
+            $.each(data.Items, function(index, element) {
+              $('ul').append("<li class='lists__item'>" 
+                                + "<div class='lists__item__inner'>"
+                                + "<a href='" + element.Item.itemUrl + "'class='lists__item__link' target='_blank'>"
+                                + "<img src='" + element.Item.largeImageUrl + "'class='lists__item__img' alt='" + element.Item.title + "'>"
+                                + "<p class='lists__item__detail'>作品名：" + element.Item.title + "</p>"
+                                + "<p class='lists__item__detail'>作者　：" + element.Item.author + "</p>"
+                                + "<p class='lists__item__detail'>出版社：" + element.Item.publisherName + "</p>"
+                                + "</a>" + "</div>" + "</li>"
+              );
+            });
+            $('ul').after('<div class="js-pager">'
+                          + '<ul class="btn-wrapper">'
+                          + '<li class="prev btn-item">' + '<a class="btn-anchor" href="#">' + '前へ' + '</a>' + '</li>'
+                          + '<li class="next btn-item">' + '<a class="btn-anchor" href="#">' + '次へ' + '</a>' + '</li>'
+                          + '</ul>' + '</div>'
+            ); 
+            $('.next').on('click',function() {
+              pageNum = pageNum + 1;
+              console.log(pageNum); //確認用
+            });
+            console.log(data);
+            console.log(pageNum);　//確認用
+          });
+        });
+      });
+
+
       // 楽天ブックスの総合検索APIを使って製作してください。
       // answerの挙動を良く見てね！
       //
@@ -80,9 +124,6 @@
       //   </ul>
       // </div>
       //
-      //
-
-
 
     </script>
   </body>
