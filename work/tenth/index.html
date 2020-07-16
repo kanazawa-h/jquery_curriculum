@@ -27,45 +27,114 @@
     <script src="../../common/js/jquery.js"></script>
     <script>
       $(function() {
-        $('#js-search-button').on('click', function() {
-          var searchWord = $('#js-search-word').val();
-          var pageNum = 1;
-          $.ajax({
-            url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
-            type: 'GET',
-            datatype: 'json',
-            data: { 
-              applicationId: '1019399324990976605', 
-              booksGenreId: '001',
-              keyword: searchWord,
-              page: pageNum,
-              hits: 20
-            },
-          }).done(function(data) {
-            $.each(data.Items, function(index, element) {
-              $('ul').append("<li class='lists__item'>" 
-                                + "<div class='lists__item__inner'>"
-                                + "<a href='" + element.Item.itemUrl + "'class='lists__item__link' target='_blank'>"
-                                + "<img src='" + element.Item.largeImageUrl + "'class='lists__item__img' alt='" + element.Item.title + "'>"
-                                + "<p class='lists__item__detail'>作品名：" + element.Item.title + "</p>"
-                                + "<p class='lists__item__detail'>作者　：" + element.Item.author + "</p>"
-                                + "<p class='lists__item__detail'>出版社：" + element.Item.publisherName + "</p>"
-                                + "</a>" + "</div>" + "</li>"
-              );
-            });
-            $('ul').after('<div class="js-pager">'
-                          + '<ul class="btn-wrapper">'
-                          + '<li class="prev btn-item">' + '<a class="btn-anchor" href="#">' + '前へ' + '</a>' + '</li>'
-                          + '<li class="next btn-item">' + '<a class="btn-anchor" href="#">' + '次へ' + '</a>' + '</li>'
-                          + '</ul>' + '</div>'
-            ); 
-            $('.next').on('click',function() {
-              pageNum = pageNum + 1;
-              console.log(pageNum); //確認用
-            });
-            console.log(data);
-            console.log(pageNum);　//確認用
+        var pageNum = 0;
+        var pageCount = 0;
+        var searchWord ='';
+        var errText = '<div class = "coment">'
+                      + '<p class = "message">' 
+                      + '</p>'
+                      + '</div>';
+        var succss = function(data) {
+          $.each(data.Items, function(index, element) {
+           $('ul').append("<li class='lists__item'>" 
+                            + "<div class='lists__item__inner'>"
+                            + "<a href='" + element.Item.itemUrl + "'class='lists__item__link' target='_blank'>"
+                            + "<img src='" + element.Item.largeImageUrl + "'class='lists__item__img' alt='" + element.Item.title + "'>"
+                            + "<p class='lists__item__detail'>作品名：" + element.Item.title + "</p>"
+                            + "<p class='lists__item__detail'>作者　：" + element.Item.author + "</p>"
+                            + "<p class='lists__item__detail'>出版社：" + element.Item.publisherName + "</p>"
+                            + "</a>" + "</div>" + "</li>"
+            );
           });
+          $('ul').after('<div class="js-pager">'
+                            + '<div class="counter">'
+                            + '<span class="counter-current">' + pageNum + '</span>'
+                            + '/'
+                            + '<span class="counter-all">' + pageCount + '</span>'
+                            + '</div>'
+                            + '<ul class="btn-wrapper">'
+                            + '<li class="prev btn-item">' + '<a class="btn-anchor" href="#">' + '前へ' + '</a>' + '</li>'
+                            + '<li class="next btn-item">' + '<a class="btn-anchor" href="#">' + '次へ' + '</a>' + '</li>'
+                            + '</ul>' 
+                            + '</div>'
+          );
+          $('.prev').addClass('disabled');
+          if (pageCount == 1) {
+            $('.next').addClass('disabled');
+          } else if(pageCount == pageNum) {
+            $('.prev').removeClass('disabled');
+            $('.next').addClass('disabled');
+          }　else if(1 !== pageNum) {
+            $('.prev').removeClass('disabled');
+          };
+        };
+        var ajaxComplete = function() {
+          searchWord = $('#js-search-word').val();
+                      $('.coment').remove();
+                      $('ul').empty();
+                      $('.js-pager').remove();
+                      $.ajax({
+                        url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
+                        type: 'GET',
+                        datatype: 'json',
+                        data: { 
+                          applicationId: '1019399324990976605', 
+                          booksGenreId: '001',
+                          keyword: searchWord,
+                          page: pageNum,
+                          hits: 20
+                        },
+                      }).done(function(data) {
+                        if (data.count > 0) {
+                          pageCount = data.pageCount;
+                          succss(data);
+                          console.log(data);
+                        } else if(data.count == 0) {
+                          $('.coment').remove();
+                          console.log(data.count);
+                          $('.lists').before(errText);
+                          $('.message').append('検索結果が見つかりませんでした。' 
+                                              + '<br>別のキーワードで検索して下さい。');
+                        };  
+                      }).fail(function(err) {
+                        console.log(err);
+                        if (err.status == 400) {
+                          $('.lists').before(errText);
+                          $('.message').append('検索文字が入力されていません。');
+                        } else if(err.status ==404){
+                          $('.lists').before(errText);
+                          $('.message').append('対象のデータが存在しません。');
+                        } else if(err.status == 429) {
+                          $('.lists').before(errText);
+                          $('.message').append('リクエスト過多です。しばらく時間を置いてからお試しください。');
+                        } else if(err.status == 500) {
+                          $('.lists').before(errText);
+                          $('.message').append('システムエラー。長時間続くようであれば、こちらよりごお問い合わせください。');
+                        } else if(err.status == 503) {
+                          $('.lists').before(errText);
+                          $('.message').append('メンテナンス (XXX/XXX)');
+                        };
+                      });
+        };
+        $('#js-search-button').on('click', function() {
+          pageNum = 1;
+          ajaxComplete(); 
+        });
+        $(document).on('click','.prev', function(e) {
+          if (1 < pageNum) {  
+            pageNum -= 1;
+            ajaxComplete();
+          } else if(1 == pageNum) {
+            e.preventDefault();
+          };     
+        });
+        $(document).on('click','.next', function(e) {
+          if (pageCount == pageNum) {
+            e.preventDefault();
+          } else if (0 < pageNum) {
+            pageNum += 1;
+            ajaxComplete(); 
+          };                
         });
       });
 
